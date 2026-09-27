@@ -15,7 +15,11 @@ const selected = games.length ? games : GAMES;
 
 async function publishedVersion(game: Game): Promise<string | null> {
   const file = Bun.file(`maps/${game}.json`);
-  return (await file.exists()) ? ((await file.json()) as { version: string }).version : null;
+  if (!(await file.exists())) return null;
+  const map = (await file.json()) as { version: string; buffs?: unknown; buffVisuals?: unknown };
+  // A map from before status art was added must rebuild even when the game
+  // patch itself has not changed.
+  return map.buffs && map.buffVisuals ? map.version : null;
 }
 
 async function output(name: string, value: string) {
@@ -47,7 +51,8 @@ for (const { game, version } of stale) {
   const { map, files, missing } = await buildMap(game, version, dir, sockets);
   console.log(
     `${game}: ${Object.keys(map.bases).length} bases, ${Object.keys(map.uniques).length} uniques, ` +
-      `${Object.keys(map.sockets).length} sockets, ${files.size} images, ${missing.length} art files not exported`,
+      `${Object.keys(map.sockets).length} sockets, ${Object.keys(map.buffs).length} buffs, ` +
+      `${Object.keys(map.buffVisuals).length} buff visuals, ${files.size} images, ${missing.length} art files not exported`,
   );
   const json = `${JSON.stringify(map, null, 1)}\n`;
   if (flag("--dry-run")) {

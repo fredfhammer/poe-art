@@ -8,6 +8,8 @@ export interface ArtMap {
   bases: Record<string, string>;
   uniques: Record<string, string>;
   sockets: Record<string, string>;
+  buffs: Record<string, string>;
+  buffVisuals: Record<string, string>;
   files: Record<string, string>;
 }
 
@@ -24,9 +26,19 @@ interface Overrides {
   bases?: Record<string, string>;
 }
 
-async function rows(file: string): Promise<[string, Row][]> {
+interface BuffVisualSource {
+  id?: string;
+  buff_id?: string;
+}
+
+interface BuffVisualRow {
+  icon?: string;
+  sources?: Record<string, BuffVisualSource[]>;
+}
+
+async function rows<T = Row>(file: string): Promise<[string, T][]> {
   const data = await Bun.file(file).json();
-  return (Array.isArray(data) ? data.map((row, i) => [String(i), row]) : Object.entries(data)) as [string, Row][];
+  return (Array.isArray(data) ? data.map((row, i) => [String(i), row]) : Object.entries(data)) as [string, T][];
 }
 
 const byKey = <T>([a]: [string, T], [b]: [string, T]) => (a < b ? -1 : a > b ? 1 : 0);
@@ -100,6 +112,31 @@ export async function buildMap(game: Game, version: string, dir: string, sockets
     socketImages.set(key, image);
   }
 
+  const buffs = new Map<string, string>();
+  const directBuffs = new Set<string>();
+  const buffVisuals = new Map<string, string>();
+  for (const [visualId, visual] of await rows<BuffVisualRow>(path.join(dir, "buff_visuals.min.json"))) {
+    if (!visual.icon) continue;
+    const image = await art(visual.icon);
+    if (!image) continue;
+    buffVisuals.set(visualId, image);
+
+    // A BuffDefinition's own visual wins over a visual inherited through one
+    // of its templates. Template links fill in buffs without a direct visual.
+    for (const source of visual.sources?.BuffDefinitions ?? []) {
+      if (!source.id) continue;
+      directBuffs.add(source.id);
+      buffs.set(source.id, image);
+    }
+    for (const sources of Object.values(visual.sources ?? {})) {
+      for (const source of sources) {
+        if (source.buff_id && !directBuffs.has(source.buff_id) && !buffs.has(source.buff_id)) {
+          buffs.set(source.buff_id, image);
+        }
+      }
+    }
+  }
+
   const map: ArtMap = {
     game,
     version,
@@ -107,6 +144,8 @@ export async function buildMap(game: Game, version: string, dir: string, sockets
     bases: sorted(bases),
     uniques: sorted(uniques),
     sockets: Object.fromEntries(socketImages),
+    buffs: sorted(buffs),
+    buffVisuals: sorted(buffVisuals),
     files: sorted(tags),
   };
   return { map, files, missing: [...missing].sort() };
