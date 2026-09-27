@@ -71,13 +71,13 @@ test("buff definitions and unlinked visuals map to exported status art", async (
     },
     ignited: {
       icon: "Art/2DArt/BuffIcons/buffonfire.dds",
-      sources: { BuffDefinitions: [{ id: "ignited", buff_category: "Debuff" }] },
+      sources: { BuffDefinitions: [{ id: "ignited", name: "Ignited", buff_category: "Debuff" }] },
     },
     rage: {
       icon: "Art/2DArt/BuffIcons/rage.dds",
-      sources: { BuffTemplates: [{ id: "RageTemplate", buff_id: "rage" }] },
+      sources: { BuffTemplates: [{ id: "RageTemplate", buff_id: "rage", name: "Rage" }] },
     },
-    visual_only: { icon: "Art/2DArt/BuffIcons/visual-only.dds" },
+    visual_only: { icon: "Art/2DArt/BuffIcons/visual-only.dds", name: "Visual Only" },
     missing: { icon: "Art/2DArt/BuffIcons/missing.dds" },
   };
   await Bun.write(path.join(dir, "base_items.min.json"), JSON.stringify(bases));
@@ -99,6 +99,9 @@ test("buff definitions and unlinked visuals map to exported status art", async (
 
   expect(map.buffs.ignited).toBe("Art/2DArt/BuffIcons/buffonfire.webp");
   expect(map.buffs.rage).toBe("Art/2DArt/BuffIcons/rage.webp");
+  expect(map.buffNames.Ignited).toBe("Art/2DArt/BuffIcons/buffonfire.webp");
+  expect(map.buffNames.Rage).toBe("Art/2DArt/BuffIcons/rage.webp");
+  expect(map.buffNames["Visual Only"]).toBe("Art/2DArt/BuffIcons/visual-only.webp");
   expect(map.buffVisuals.visual_only).toBe("Art/2DArt/BuffIcons/visual-only.webp");
   expect(map.buffs.visual_only).toBeUndefined();
   expect(missing).toContain("Art/2DArt/BuffIcons/missing.dds");

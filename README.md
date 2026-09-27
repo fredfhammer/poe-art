@@ -21,6 +21,7 @@ R2 bucket, and commits the new map to `maps/`.
   "uniques": { "Astramentis": "Art/2DItems/Amulets/Uniques/Astramentis.webp" },
   "sockets": { "red": "Art/2DArt/UIImages/InGame/4K/ItemsSocketRed.webp" },
   "buffs": { "ignited": "Art/2DArt/BuffIcons/buffonfire.webp" },
+  "buffNames": { "Ignited": "Art/2DArt/BuffIcons/buffonfire.webp" },
   "buffVisuals": { "ignited": "Art/2DArt/BuffIcons/buffonfire.webp" },
   "files": { "Art/2DItems/Rings/Basetypes/AmethystRing.webp": "3f9a1c2b" }
 }
@@ -40,9 +41,9 @@ and `empty`, `rune` and `soulCore` augment sockets in PoE2. `src/config.ts` list
 from; PoE1 sprites are cut out of the game's sprite sheets.
 
 `buffs` maps `BuffDefinitions` ids to their icons and includes every status category, including buffs,
-debuffs, charges, flasks, hexes, marks and heralds. `buffVisuals` maps every exported `BuffVisuals` id to its
-icon, including visuals which are not linked directly to a buff definition. Buffs without an in-game icon are
-not listed.
+debuffs, charges, flasks, hexes, marks and heralds. `buffNames` provides the corresponding display-name lookup.
+`buffVisuals` maps every exported `BuffVisuals` id to its icon, including visuals which are not linked directly
+to a buff definition. Buffs without an in-game icon are not listed.
 
 The same map is published at `maps/<game>/<version>.json` and `maps/<game>/latest.json` on the art domain.
 Images and versioned maps are cached for a year; `latest.json` for five minutes.
