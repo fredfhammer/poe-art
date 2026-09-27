@@ -1,9 +1,10 @@
 # poe-art
 
-Item art for Path of Exile 1 and 2, taken from each game patch and served from `https://art.pobredux.com`.
+Item and status-effect art for Path of Exile 1 and 2, taken from each game patch and served from
+`https://art.pobredux.com`.
 
 A scheduled workflow asks GGG's patch servers for the current version of each game. When a game has a new
-patch, it exports the item tables, item art and socket art from the patch CDN with
+patch, it exports the item tables, item art, socket art and buff/debuff art from the patch CDN with
 [ggpk-explorer](https://github.com/juddisjudd/ggpk-explorer), uploads new and changed images to the `poe-art`
 R2 bucket, and commits the new map to `maps/`.
 
@@ -19,6 +20,9 @@ R2 bucket, and commits the new map to `maps/`.
   "bases": { "Amethyst Ring": "Art/2DItems/Rings/Basetypes/AmethystRing.webp" },
   "uniques": { "Astramentis": "Art/2DItems/Amulets/Uniques/Astramentis.webp" },
   "sockets": { "red": "Art/2DArt/UIImages/InGame/4K/ItemsSocketRed.webp" },
+  "buffs": { "ignited": "Art/2DArt/BuffIcons/buffonfire.webp" },
+  "buffNames": { "Ignited": "Art/2DArt/BuffIcons/buffonfire.webp" },
+  "buffVisuals": { "ignited": "Art/2DArt/BuffIcons/buffonfire.webp" },
   "files": { "Art/2DItems/Rings/Basetypes/AmethystRing.webp": "3f9a1c2b" }
 }
 ```
@@ -35,6 +39,11 @@ metadata ID.
 `sockets` has the item socket art: `red`, `green`, `blue`, `white` and `link` in both games, `abyss` in PoE1,
 and `empty`, `rune` and `soulCore` augment sockets in PoE2. `src/config.ts` lists the UI sprites they come
 from; PoE1 sprites are cut out of the game's sprite sheets.
+
+`buffs` maps `BuffDefinitions` ids to their icons and includes every status category, including buffs,
+debuffs, charges, flasks, hexes, marks and heralds. `buffNames` provides the corresponding display-name lookup.
+`buffVisuals` maps every exported `BuffVisuals` id to its icon, including visuals which are not linked directly
+to a buff definition. Buffs without an in-game icon are not listed.
 
 The same map is published at `maps/<game>/<version>.json` and `maps/<game>/latest.json` on the art domain.
 Images and versioned maps are cached for a year; `latest.json` for five minutes.
