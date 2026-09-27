@@ -47,6 +47,7 @@ async function rows<T = Row>(file: string): Promise<[string, T][]> {
 const byKey = <T>([a]: [string, T], [b]: [string, T]) => (a < b ? -1 : a > b ? 1 : 0);
 const sorted = (record: Map<string, string>) => Object.fromEntries([...record].sort(byKey));
 const ascii = (name: string) => name.normalize("NFD").replace(/\p{M}/gu, "");
+const loose = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, "");
 
 export async function buildMap(game: Game, version: string, dir: string, sockets: Record<string, string>) {
   const files = new Map<string, string>();
@@ -120,9 +121,13 @@ export async function buildMap(game: Game, version: string, dir: string, sockets
   const buffNames = new Map<string, string>();
   const directBuffNames = new Set<string>();
   const buffVisuals = new Map<string, string>();
+  const nameOwners = new Map<string, string | null>();
   for (const [visualId, visual] of await rows<BuffVisualRow>(path.join(dir, "buff_visuals.min.json"))) {
-    if (!visual.icon) continue;
-    const image = await art(visual.icon);
+    const image = visual.icon ? await art(visual.icon) : null;
+    // Sanctum and boss buffs reuse player buff names; the buff whose id matches the name owns it.
+    for (const source of visual.sources?.BuffDefinitions ?? []) {
+      if (source.id && source.name && loose(source.id) === loose(source.name)) nameOwners.set(source.name, image);
+    }
     if (!image) continue;
     buffVisuals.set(visualId, image);
 
@@ -150,6 +155,10 @@ export async function buildMap(game: Game, version: string, dir: string, sockets
     if (visual.name && !directBuffNames.has(visual.name) && !buffNames.has(visual.name)) {
       buffNames.set(visual.name, image);
     }
+  }
+  for (const [name, image] of nameOwners) {
+    if (image) buffNames.set(name, image);
+    else buffNames.delete(name);
   }
   for (const [name, image] of [...buffNames]) {
     const plain = ascii(name);

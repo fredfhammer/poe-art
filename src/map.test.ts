@@ -106,3 +106,52 @@ test("buff definitions and unlinked visuals map to exported status art", async (
   expect(map.buffs.visual_only).toBeUndefined();
   expect(missing).toContain("Art/2DArt/BuffIcons/missing.dds");
 });
+
+test("a buff whose id matches its name owns that name", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "poe-art-map-"));
+  temporary.push(dir);
+  const visuals = {
+    divinity: {
+      icon: "Art/2DArt/BuffIcons/Divinity.dds",
+      sources: { BuffDefinitions: [{ id: "divinity", name: "Divinity" }] },
+    },
+    aod_boss_divine_buff: {
+      icon: "Art/2DArt/BuffIcons/BossBlessing.dds",
+      sources: { BuffDefinitions: [{ id: "aod_boss_divine_buff", name: "Divinity" }] },
+    },
+    Sanctum_frozen: {
+      icon: "Art/2DArt/BuffIcons/SanctumTimeFrozen.dds",
+      sources: { BuffDefinitions: [{ id: "Sanctum_frozen", name: "Frozen" }] },
+    },
+    frozen: { sources: { BuffDefinitions: [{ id: "frozen", name: "Frozen" }] } },
+  };
+  const bases = {
+    "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/StormBladeOneHand": {
+      name: "Storm Blade",
+      visual_identity: { dds_file: "Art/StormBladeOneHand.dds" },
+    },
+    "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/StormBladeTwoHand": {
+      name: "Two Handed Storm Blade",
+      visual_identity: { dds_file: "Art/StormBladeTwoHand.dds" },
+    },
+  };
+  await Bun.write(path.join(dir, "base_items.min.json"), JSON.stringify(bases));
+  await Bun.write(path.join(dir, "uniques.min.json"), "[]");
+  await Bun.write(path.join(dir, "skill_gems.min.json"), "{}");
+  await Bun.write(path.join(dir, "buff_visuals.min.json"), JSON.stringify(visuals));
+  for (const file of [
+    "Art/StormBladeOneHand.webp",
+    "Art/StormBladeTwoHand.webp",
+    "Art/2DArt/BuffIcons/Divinity.webp",
+    "Art/2DArt/BuffIcons/BossBlessing.webp",
+    "Art/2DArt/BuffIcons/SanctumTimeFrozen.webp",
+  ]) {
+    await Bun.write(path.join(dir, file), file);
+  }
+
+  const { map } = await buildMap("poe2", "test", dir, {});
+
+  expect(map.buffNames.Divinity).toBe("Art/2DArt/BuffIcons/Divinity.webp");
+  expect(map.buffNames.Frozen).toBeUndefined();
+  expect(map.buffs.Sanctum_frozen).toBe("Art/2DArt/BuffIcons/SanctumTimeFrozen.webp");
+});
